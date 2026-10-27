@@ -506,7 +506,7 @@
                 <Grid ColumnDefinitions="90,180,150,100,*,300">
                   <TextBlock Text="PID" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="1" Text="Akun" Classes="muted" FontWeight="Bold" FontSize="11" />
-                  <TextBlock Grid.Column="2" Text="Mulai • uptime" Classes="muted" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Grid.Column="2" Text="Mulai" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="3" Text="RAM" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="4" Text="Judul jendela" Classes="muted" FontWeight="Bold" FontSize="11" />
                 </Grid>
