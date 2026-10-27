@@ -1,0 +1,232 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SupaBlox.App"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <FontFamily x:Key="AppFont">fonts:Inter#Inter</FontFamily>
+      <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, monospace</FontFamily>
+      <SolidColorBrush x:Key="BgBrush" Color="#0D111E" />
+      <SolidColorBrush x:Key="SideBrush" Color="#111625" />
+      <SolidColorBrush x:Key="CardBrush" Color="#161C2E" />
+      <SolidColorBrush x:Key="Card2Brush" Color="#1B2237" />
+      <SolidColorBrush x:Key="InputBrush" Color="#10152A" />
+      <SolidColorBrush x:Key="LineBrush" Color="#283048" />
+      <SolidColorBrush x:Key="TextBrush" Color="#E6E9F2" />
+      <SolidColorBrush x:Key="MutedBrush" Color="#8A93AB" />
+      <SolidColorBrush x:Key="DimBrush" Color="#5F6880" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#201E40" />
+      <SolidColorBrush x:Key="AccentTextBrush" Color="#BAA6FF" />
+      <SolidColorBrush x:Key="GreenBrush" Color="#34D399" />
+      <SolidColorBrush x:Key="RedBrush" Color="#F87171" />
+      <LinearGradientBrush x:Key="AccentGrad" StartPoint="0%,50%" EndPoint="100%,50%">
+        <GradientStop Color="#7C5CFF" Offset="0" />
+        <GradientStop Color="#A06CFF" Offset="1" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="AccentGradHover" StartPoint="0%,50%" EndPoint="100%,50%">
+        <GradientStop Color="#8C70FF" Offset="0" />
+        <GradientStop Color="#B183FF" Offset="1" />
+      </LinearGradientBrush>
+
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ButtonBackground" Color="#1B2237" />
+          <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#232B45" />
+          <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#283152" />
+          <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#161C2E" />
+          <SolidColorBrush x:Key="ButtonBorderBrush" Color="#283048" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3A4466" />
+          <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#3A4466" />
+          <SolidColorBrush x:Key="ButtonForeground" Color="#E6E9F2" />
+          <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#5F6880" />
+          <SolidColorBrush x:Key="TextControlBackground" Color="#10152A" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#121830" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#10152A" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="#283048" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#3A4466" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#7C5CFF" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#E6E9F2" />
+          <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#E6E9F2" />
+          <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#5F6880" />
+          <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#5F6880" />
+          <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#5F6880" />
+          <SolidColorBrush x:Key="ComboBoxBackground" Color="#10152A" />
+          <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#121830" />
+          <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#283048" />
+          <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#181E32" />
+          <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#34D399" />
+          <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#4ADEAA" />
+          <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#283048" />
+          <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#3A4466" />
+          <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#2E3654" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark" Accent="#FF7C5CFF" RegionColor="#FF0D111E" ErrorText="#FFF87171" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{StaticResource BgBrush}" />
+      <Setter Property="FontFamily" Value="{DynamicResource AppFont}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <!-- Teks -->
+    <Style Selector="TextBlock.h1"><Setter Property="FontSize" Value="26" /><Setter Property="FontWeight" Value="Bold" /></Style>
+    <Style Selector="TextBlock.h2"><Setter Property="FontSize" Value="16" /><Setter Property="FontWeight" Value="Bold" /></Style>
+    <Style Selector="TextBlock.title"><Setter Property="FontSize" Value="15" /><Setter Property="FontWeight" Value="Bold" /></Style>
+    <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{StaticResource MutedBrush}" /><Setter Property="FontSize" Value="12" /></Style>
+    <Style Selector="TextBlock.dim"><Setter Property="Foreground" Value="{StaticResource DimBrush}" /><Setter Property="FontSize" Value="11" /></Style>
+    <Style Selector="TextBlock.label"><Setter Property="Foreground" Value="{StaticResource MutedBrush}" /><Setter Property="FontSize" Value="12" /><Setter Property="Margin" Value="0,6,0,4" /></Style>
+    <Style Selector="TextBlock.section"><Setter Property="Foreground" Value="{StaticResource DimBrush}" /><Setter Property="FontSize" Value="11" /><Setter Property="FontWeight" Value="Bold" /><Setter Property="LetterSpacing" Value="1" /></Style>
+    <Style Selector="TextBlock.mono"><Setter Property="FontFamily" Value="{StaticResource MonoFont}" /></Style>
+
+    <!-- Kartu -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource CardBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="16" />
+    </Style>
+    <Style Selector="Border.card.selected">
+      <Setter Property="BorderBrush" Value="#7C5CFF" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="Padding" Value="15" />
+    </Style>
+    <Style Selector="Border.card2">
+      <Setter Property="Background" Value="{StaticResource Card2Brush}" />
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="Border.badge">
+      <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="9,3" />
+    </Style>
+
+    <!-- Tombol -->
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.primary /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentGrad}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentGradHover}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2A2550" />
+      <Setter Property="Foreground" Value="#8A80C0" />
+    </Style>
+    <Style Selector="Button.icon">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Width" Value="36" />
+      <Setter Property="Height" Value="36" />
+      <Setter Property="FontSize" Value="15" />
+    </Style>
+    <Style Selector="Button.chip">
+      <Setter Property="Padding" Value="10,3" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    </Style>
+    <Style Selector="Button.row">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.row:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1E2440" />
+    </Style>
+    <Style Selector="Button.tab">
+      <Setter Property="MinWidth" Value="140" />
+    </Style>
+    <Style Selector="Button.tab.on /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentGrad}" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Input -->
+    <Style Selector="TextBox">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="MinHeight" Value="38" />
+    </Style>
+    <Style Selector="CheckBox"><Setter Property="FontSize" Value="12" /></Style>
+
+    <!-- Navigasi -->
+    <Style Selector="ListBox.nav">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem">
+      <Setter Property="Padding" Value="14,10" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1A2035" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#26234D" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected TextBlock.navtext">
+      <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected TextBlock.navicon">
+      <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+    </Style>
+
+    <Style Selector="ProgressBar.slot">
+      <Setter Property="MinHeight" Value="4" />
+      <Setter Property="Height" Value="4" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Background" Value="{StaticResource LineBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource GreenBrush}" />
+    </Style>
+  </Application.Styles>
+</Application>

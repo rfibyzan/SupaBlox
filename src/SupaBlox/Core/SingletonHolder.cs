@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace SupaBlox;
+namespace SupaBlox.Core;
 
 /// <summary>
 /// Memegang objek singleton Roblox (ROBLOX_singletonMutex + ROBLOX_singletonEvent)

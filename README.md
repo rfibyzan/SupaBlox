@@ -1,21 +1,29 @@
 # SupaBlox
 
-Multi-instance Roblox untuk Windows (C# .NET 8), hasil reverse engineering mekanisme Astro Account Manager.
+Multi-instance Roblox + account manager untuk Windows (C# .NET 8 + Avalonia), hasil reverse engineering mekanisme Astro Account Manager.
 
-## Cara kerja
+## Fitur (v0.2.0)
+- **Akun**: tambah lewat login browser (Edge/Chrome, profil sementara), tempel cookie, atau impor massal. Cookie `.ROBLOSECURITY` disimpan terenkripsi DPAPI (hanya akun Windows kamu yang bisa membuka). Grup, alias, catatan, favorit, game default, status presence.
+- **Kontrol Cepat**: pilih game dengan **mengetik nama** (atau tempel Place ID / link), opsional Job ID atau link server privat, lalu launch banyak akun sekaligus dengan jeda dan batas instance. Semua isian tersimpan otomatis dan tidak reset saat pindah tab atau restart.
+- **Game & server**: cari game, lihat server publik (ping, slot), Join ke server tertentu atau server acak dengan akun yang dicentang.
+- **Instance**: Multi Roblox ON/OFF (status mutex/event), daftar RobloxPlayerBeta (PID, akun, mulai, RAM, judul), Fokus, Tutup (graceful).
+- Tray, mulai bersama Windows, nyalakan Multi Roblox otomatis.
+- Font **Builder Sans** dimuat dari instalasi Roblox Player di PC kamu (`%LocalAppData%\Roblox\Versions\*\content\fonts`). Font ini tidak dibundel karena lisensinya; kalau tidak ada, UI memakai Inter.
+
+## Cara kerja Multi Roblox
 Roblox menolak jalan dobel lewat dua objek kernel bernama: `ROBLOX_singletonMutex` dan `ROBLOX_singletonEvent`.
-SupaBlox membuat dan memegang keduanya di satu thread khusus yang hidup selama aplikasi terbuka, jadi Roblox yang dibuka setelahnya tidak menutup dirinya sendiri.
+SupaBlox membuat dan memegang keduanya di satu thread khusus selama Multi Roblox ON.
 
-Mode **mutex-only**: SupaBlox tidak menyentuh proses Roblox sama sekali (tanpa DuplicateHandle, WriteProcessMemory, injeksi, DLL, atau FFlags).
+Mode **mutex-only**: SupaBlox tidak menyentuh memori proses Roblox (tanpa DuplicateHandle, WriteProcessMemory, injeksi, DLL, atau FFlags). Launch akun memakai alur resmi web Roblox: auth ticket (`auth.roblox.com`) lalu URI `roblox-player:`.
 
 ## Pakai
-1. Tutup semua Roblox.
-2. Jalankan `SupaBlox.exe`, biarkan jendelanya terbuka.
-3. Buka Roblox berkali-kali.
-4. Tekan Enter di SupaBlox untuk mematikan.
+1. Tutup semua Roblox, buka `SupaBlox.exe` (Multi Roblox menyala otomatis).
+2. Tambah akun, centang beberapa, pilih game di Kontrol Cepat, klik **Launch akun terpilih**.
+
+Data lokal: `%LocalAppData%\SupaBlox` (accounts.json, settings.json, error.log).
 
 ## Build
 ```powershell
 dotnet build src\SupaBlox -c Release
-dotnet publish src\SupaBlox -c Release -o publish
+dotnet publish src\SupaBlox -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 ```
