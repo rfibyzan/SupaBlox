@@ -19,7 +19,6 @@
       <StackPanel Orientation="Horizontal" Spacing="10" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
         <Image Source="/Assets/supablox.png" Width="22" Height="22" />
         <TextBlock Text="SupaBlox" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
-        <TextBlock Text="Multi Roblox &amp; account manager" Classes="dim" VerticalAlignment="Center" />
       </StackPanel>
       <Button Grid.Column="1" Classes="search" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding OpenPaletteCommand}" ToolTip.Tip="Search global (Ctrl+K)">
         <Grid ColumnDefinitions="Auto,*,Auto" Width="340">
