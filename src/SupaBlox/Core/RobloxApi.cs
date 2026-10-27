@@ -43,6 +43,67 @@ public sealed class RobloxApi
         return new RobloxUser(r.GetProperty("id").GetInt64(), Str(r, "name"), Str(r, "displayName"));
     }
 
+    /// <summary>Username -> user (tanpa cookie). null jika tidak ada.</summary>
+    public async Task<RobloxUser?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
+    {
+        var body = "{\"usernames\":[" + JsonSerializer.Serialize(username.Trim().TrimStart('@'), PresenceJson.Default.String) + "],\"excludeBannedUsers\":false}";
+        using var req = new HttpRequestMessage(HttpMethod.Post, "https://users.roblox.com/v1/usernames/users")
+        { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+        using var res = await _http.SendAsync(req, ct);
+        res.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+        foreach (var u in doc.RootElement.GetProperty("data").EnumerateArray())
+            return new RobloxUser(u.GetProperty("id").GetInt64(), Str(u, "name"), Str(u, "displayName"));
+        return null;
+    }
+
+    /// <summary>Profil publik: nama, display name, tanggal dibuat.</summary>
+    public async Task<(RobloxUser User, DateTime? Created)> GetUserInfoAsync(long userId, CancellationToken ct = default)
+    {
+        using var res = await _http.GetAsync($"https://users.roblox.com/v1/users/{userId}", ct);
+        res.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+        var r = doc.RootElement;
+        DateTime? created = r.TryGetProperty("created", out var c) && c.ValueKind == JsonValueKind.String && c.TryGetDateTime(out var d) ? d.ToUniversalTime() : null;
+        return (new RobloxUser(userId, Str(r, "name"), Str(r, "displayName")), created);
+    }
+
+    /// <summary>Deskripsi profil akun sendiri (users.roblox.com/v1/description).</summary>
+    public async Task<string> GetDescriptionAsync(string cookie, CancellationToken ct = default)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, "https://users.roblox.com/v1/description");
+        AddCookie(req, cookie);
+        using var res = await _http.SendAsync(req, ct);
+        if (res.StatusCode == HttpStatusCode.Unauthorized) throw new CookieExpiredException();
+        res.EnsureSuccessStatusCode();
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+        return Str(doc.RootElement, "description");
+    }
+
+    /// <summary>Ubah deskripsi profil. Mengembalikan teks yang tersimpan (bisa difilter Roblox jadi ###).</summary>
+    public async Task<string> SetDescriptionAsync(string cookie, string description, CancellationToken ct = default)
+    {
+        var body = "{\"description\":" + JsonSerializer.Serialize(description, PresenceJson.Default.String) + "}";
+        using var res = await SendWithCsrfAsync(HttpMethod.Post, "https://users.roblox.com/v1/description", cookie, body, ct);
+        if (res.StatusCode == HttpStatusCode.Unauthorized) throw new CookieExpiredException();
+        var text = await res.Content.ReadAsStringAsync(ct);
+        if (!res.IsSuccessStatusCode) throw new InvalidOperationException($"Roblox menolak (HTTP {(int)res.StatusCode}): {RobloxError(text)}");
+        try { using var doc = JsonDocument.Parse(text); return Str(doc.RootElement, "description"); }
+        catch { return description; }
+    }
+
+    private static string RobloxError(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("errors", out var errs))
+                foreach (var e in errs.EnumerateArray()) return Str(e, "message");
+        }
+        catch { }
+        return json.Length > 160 ? json[..160] : json;
+    }
+
     /// <summary>Tiket sekali pakai untuk roblox-player: (sama seperti tombol Play di web).</summary>
     public async Task<string> GetAuthTicketAsync(string cookie, CancellationToken ct = default)
     {

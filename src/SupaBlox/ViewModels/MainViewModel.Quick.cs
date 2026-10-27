@@ -280,6 +280,7 @@ public sealed partial class MainViewModel
                     var before = Launcher.RunningPids();
                     item.Status = "membuka Roblox…";
                     Launcher.Start(Launcher.BuildUri(ticket, item.Target));
+                    RememberTarget(item.Account, item.Target);
                     _ = TrackNewPidAsync(item.Account, before);
                     ShowMessage($"{item.Account.Name} diluncurkan ke {item.Target.Describe()}.");
                 }
@@ -316,6 +317,7 @@ public sealed partial class MainViewModel
             {
                 _pidToAccount[fresh[0]] = account.Model.Id;
                 account.SetPid(fresh[0]);
+                if (account.Model.Watch) WatchPid(fresh[0], account);
                 RefreshInstances();
                 return;
             }

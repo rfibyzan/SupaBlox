@@ -124,7 +124,10 @@ public sealed class AccountItem : ObservableObject
 
     public bool IsExpired => _presenceState == AccountState.Expired;
 
-    public void RefreshTexts() => Notify(nameof(Name), nameof(UserText), nameof(Initial), nameof(GroupText), nameof(DefaultGameText), nameof(FavoriteGlyph), nameof(FavoriteBrush));
+    public bool WatchBadgeVisible => Model.Watch;
+    public string WatchBadge => Model.AutoRelaunch ? "↻ AUTO" : "PANTAU";
+
+    public void RefreshTexts() => Notify(nameof(Name), nameof(UserText), nameof(Initial), nameof(GroupText), nameof(DefaultGameText), nameof(FavoriteGlyph), nameof(FavoriteBrush), nameof(WatchBadgeVisible), nameof(WatchBadge));
 }
 
 public sealed class GameItem : ObservableObject

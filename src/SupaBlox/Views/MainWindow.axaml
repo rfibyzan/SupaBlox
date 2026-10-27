@@ -21,6 +21,15 @@
         <TextBlock Text="SupaBlox" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
         <TextBlock Text="Multi Roblox &amp; account manager" Classes="dim" VerticalAlignment="Center" />
       </StackPanel>
+      <Button Grid.Column="1" Classes="search" HorizontalAlignment="Center" VerticalAlignment="Center" Command="{Binding OpenPaletteCommand}" ToolTip.Tip="Search global (Ctrl+K)">
+        <Grid ColumnDefinitions="Auto,*,Auto" Width="340">
+          <TextBlock Text="⌕" FontSize="13" Foreground="{StaticResource DimBrush}" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1" Text="Cari akun, game, Job ID, username…" Classes="dim" Margin="8,0" VerticalAlignment="Center" />
+          <Border Grid.Column="2" Background="#232B45" CornerRadius="4" Padding="6,1">
+            <TextBlock Text="Ctrl K" FontSize="10" Foreground="{StaticResource MutedBrush}" />
+          </Border>
+        </Grid>
+      </Button>
       <Border Grid.Column="2" CornerRadius="10" Padding="10,3" Margin="0,0,12,0" VerticalAlignment="Center" Background="{Binding MultiBadgeBg}" IsHitTestVisible="False">
         <StackPanel Orientation="Horizontal" Spacing="6">
           <Ellipse Width="6" Height="6" Fill="{Binding MultiBadgeFg}" VerticalAlignment="Center" />
@@ -90,7 +99,7 @@
     <Grid Grid.Column="1" RowDefinitions="*,Auto">
 
       <!-- ========== HALAMAN AKUN ========== -->
-      <Grid IsVisible="{Binding IsAccountsPage}" Margin="32,26,24,18" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,340">
+      <Grid IsVisible="{Binding IsAccountsPage}" Margin="32,26,24,18" RowDefinitions="Auto,Auto,Auto,Auto,*" ColumnDefinitions="*,340">
         <StackPanel Grid.ColumnSpan="2">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel>
@@ -100,18 +109,56 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
               <Button Classes="primary" Content="+  Tambah akun" Command="{Binding OpenAddCommand}" />
               <Button Content="⇪  Impor massal" Command="{Binding OpenBulkCommand}" />
+              <Button Content="⇅  Pindah PC">
+                <Button.Flyout>
+                  <MenuFlyout Placement="BottomEdgeAlignedRight">
+                    <MenuItem Header="Ekspor akun ke file .sbx…" Command="{Binding OpenExportCommand}" />
+                    <MenuItem Header="Impor akun dari file .sbx…" Command="{Binding OpenImportCommand}" />
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
               <Button Content="⟳  Refresh status" Command="{Binding RefreshStatusCommand}" />
             </StackPanel>
           </Grid>
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="0,22,0,0" ColumnDefinitions="260,12,170,12,170,*">
+        <Grid Grid.Row="1" Margin="0,22,0,0" ColumnDefinitions="260,12,170,*">
           <TextBox Text="{Binding AccountFilter}" Watermark="Cari akun / catatan" />
           <ComboBox Grid.Column="2" ItemsSource="{Binding StatusOptions}" SelectedIndex="{Binding StatusFilter}" HorizontalAlignment="Stretch" />
-          <ComboBox Grid.Column="4" ItemsSource="{Binding GroupOptions}" SelectedItem="{Binding GroupFilter}" HorizontalAlignment="Stretch" />
         </Grid>
 
-        <Grid Grid.Row="2" Margin="0,18,0,12" ColumnDefinitions="Auto,Auto,*,Auto">
+        <!-- Chip grup: klik = filter, seret kartu akun ke chip = pindah grup, klik kanan = hapus -->
+        <WrapPanel Grid.Row="2" Margin="0,14,16,0" Orientation="Horizontal">
+          <ItemsControl x:Name="GroupChipList" ItemsSource="{Binding GroupChips}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:GroupChip">
+                <Button Classes="gchip" Classes.on="{Binding IsActive}" Classes.drop="{Binding IsDropTarget}" Command="{Binding SelectCommand}"
+                        DragDrop.AllowDrop="{Binding AcceptsDrop}" Margin="0,0,8,6">
+                  <Button.ContextMenu>
+                    <ContextMenu IsVisible="{Binding IsCustom}">
+                      <MenuItem Header="Hapus grup (akun jadi tanpa grup)" Command="{Binding DeleteCommand}" />
+                    </ContextMenu>
+                  </Button.ContextMenu>
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Count}" Classes="count" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Classes="gchip" Content="+ Grup baru" Command="{Binding OpenNewGroupCommand}" IsVisible="{Binding !IsNewGroupOpen}" Margin="0,0,8,6" />
+          <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsNewGroupOpen}" Margin="0,0,8,6">
+            <TextBox x:Name="NewGroupBox" Text="{Binding NewGroupName}" Watermark="nama grup" Width="150" Height="30" MinHeight="30" Padding="10,4" FontSize="12" />
+            <Button Classes="gchip on" Content="Buat" Command="{Binding CreateGroupCommand}" />
+            <Button Classes="gchip" Content="✕" Command="{Binding CancelNewGroupCommand}" />
+          </StackPanel>
+        </WrapPanel>
+
+        <Grid Grid.Row="3" Margin="0,10,0,12" ColumnDefinitions="Auto,Auto,*,Auto">
           <Ellipse Width="8" Height="8" Fill="#7C5CFF" VerticalAlignment="Center" Margin="2,0,10,0" />
           <TextBlock Grid.Column="1" Text="{Binding VisibleHeader}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
           <TextBlock Grid.Column="2" Text="{Binding SelectedBadge, StringFormat='  •  {0} dipilih'}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" VerticalAlignment="Center" />
@@ -121,7 +168,7 @@
           </StackPanel>
         </Grid>
 
-        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
           <Panel>
             <Border Classes="card" IsVisible="{Binding NoAccounts}" Padding="28" Margin="0,0,16,0">
               <StackPanel Spacing="8" HorizontalAlignment="Center">
@@ -129,13 +176,13 @@
                 <TextBlock Text="Klik Tambah akun untuk login lewat browser atau tempel cookie." Classes="muted" HorizontalAlignment="Center" />
               </StackPanel>
             </Border>
-            <ItemsControl ItemsSource="{Binding VisibleAccounts}">
+            <ItemsControl x:Name="AccountsList" ItemsSource="{Binding VisibleAccounts}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:AccountItem">
-                  <Border Classes="card" Classes.selected="{Binding IsSelected}" Width="246" Margin="0,0,14,14">
+                  <Border Classes="card acc" Classes.selected="{Binding IsSelected}" Width="246" Margin="0,0,14,14" ToolTip.Tip="Seret ke chip grup untuk memindahkan">
                     <StackPanel>
                       <Grid ColumnDefinitions="Auto,*,Auto">
                         <Border Width="44" Height="44" CornerRadius="22" Background="{Binding AvatarBrush}" ClipToBounds="True">
@@ -152,7 +199,10 @@
                       </Grid>
                       <StackPanel Orientation="Horizontal" Spacing="7" Margin="0,14,0,0">
                         <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding StatusText}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                        <TextBlock Text="{Binding StatusText}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="150" />
+                        <Border IsVisible="{Binding WatchBadgeVisible}" Background="#201E40" CornerRadius="6" Padding="6,1" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding WatchBadge}" Foreground="{StaticResource AccentTextBrush}" FontSize="10" FontWeight="Bold" />
+                        </Border>
                       </StackPanel>
                       <Grid ColumnDefinitions="92,*" RowDefinitions="Auto,Auto" Margin="0,10,0,0">
                         <TextBlock Text="Grup" Classes="dim" />
@@ -179,7 +229,7 @@
         </ScrollViewer>
 
         <!-- ===== Kontrol Cepat ===== -->
-        <Border Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" Classes="card" Margin="4,22,0,0" Padding="0">
+        <Border Grid.Column="1" Grid.Row="1" Grid.RowSpan="4" Classes="card" Margin="4,22,0,0" Padding="0">
           <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="7" Margin="20,8,20,14">
               <Ellipse Width="6" Height="6" Fill="{StaticResource GreenBrush}" VerticalAlignment="Center" />
@@ -270,6 +320,15 @@
                 <TextBox Text="{Binding QuickJobId}" Watermark="kosong = server acak" />
 
                 <Button Classes="primary" Content="▶  Launch akun terpilih" Command="{Binding LaunchSelectedCommand}" HorizontalAlignment="Stretch" Height="42" FontSize="14" Margin="0,14,0,0" />
+
+                <Grid ColumnDefinitions="*,Auto" Margin="0,16,0,4">
+                  <TextBlock Text="Follow user" Classes="label" />
+                  <TextBlock Grid.Column="1" Text="join ke server orang itu" Classes="dim" VerticalAlignment="Center" />
+                </Grid>
+                <Grid ColumnDefinitions="*,8,Auto">
+                  <TextBox x:Name="FollowBox" Text="{Binding FollowUsername}" Watermark="username Roblox" />
+                  <Button Grid.Column="2" Content="➜  Follow" Command="{Binding FollowCommand}" MinWidth="96" />
+                </Grid>
 
                 <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,18,0,6" />
                 <Grid ColumnDefinitions="*,12,*">
@@ -646,7 +705,7 @@
 
     <!-- ================= DIALOG EDIT AKUN ================= -->
     <Border Grid.ColumnSpan="2" IsVisible="{Binding IsEditOpen}" Background="#B0050710">
-      <Border Width="520" Background="#141A2C" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="16"
+      <Border Width="900" Background="#141A2C" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="16"
               HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 20 60 0 #C0000000">
         <StackPanel>
           <Grid ColumnDefinitions="*,Auto" Margin="24,22,18,16">
@@ -657,6 +716,7 @@
             <Button Grid.Column="1" Classes="icon" Width="30" Height="30" FontSize="12" Content="✕" Command="{Binding CloseEditCommand}" VerticalAlignment="Top" />
           </Grid>
           <Border Height="1" Background="{StaticResource LineBrush}" />
+          <Grid ColumnDefinitions="*,1,*">
           <StackPanel Margin="24,12,24,18" Spacing="2">
             <Grid ColumnDefinitions="*,14,*">
               <StackPanel>
@@ -677,6 +737,43 @@
             <CheckBox Content="Favorit (tampil paling atas)" IsChecked="{Binding EditFavorite}" Margin="0,10,0,0" />
             <TextBlock Text="{Binding EditStatus}" IsVisible="{Binding HasEditStatus}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
           </StackPanel>
+          <Border Grid.Column="1" Background="{StaticResource LineBrush}" />
+          <StackPanel Grid.Column="2" Margin="24,12,24,18" Spacing="2">
+            <TextBlock Text="PANTAU &amp; AUTO-RELAUNCH" Classes="section" Margin="0,8,0,6" />
+            <CheckBox Content="Pantau akun ini (kabari kalau Roblox crash/tertutup)" IsChecked="{Binding EditWatch}" />
+            <StackPanel IsEnabled="{Binding EditWatch}" Spacing="2" Margin="26,0,0,0">
+              <CheckBox Content="Auto-relaunch" IsChecked="{Binding EditAutoRelaunch}" />
+              <Grid ColumnDefinitions="*,12,*" IsEnabled="{Binding EditAutoRelaunch}">
+                <StackPanel>
+                  <TextBlock Text="Jeda relaunch (dtk)" Classes="label" />
+                  <NumericUpDown Value="{Binding EditRelaunchDelay}" Minimum="0" Maximum="600" Increment="5" FormatString="0" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                  <TextBlock Text="Maks percobaan" Classes="label" />
+                  <NumericUpDown Value="{Binding EditMaxRelaunch}" Minimum="1" Maximum="50" Increment="1" FormatString="0" />
+                </StackPanel>
+              </Grid>
+              <CheckBox Content="Relaunch juga kalau ditutup normal" IsChecked="{Binding EditRelaunchNormal}" IsEnabled="{Binding EditAutoRelaunch}" Margin="0,6,0,0" />
+              <CheckBox Content="Rejoin server yang sama (kalau masih ada)" IsChecked="{Binding EditRejoin}" IsEnabled="{Binding EditAutoRelaunch}" />
+              <TextBlock Text="Tutup lewat tombol SupaBlox atau dialog Multi OFF tidak memicu relaunch." Classes="dim" TextWrapping="Wrap" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,Auto" Margin="0,18,0,6">
+              <TextBlock Text="PROFIL ROBLOX" Classes="section" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Classes="chip" Content="⟳  Refresh profil" Command="{Binding ProfileRefreshCommand}" IsEnabled="{Binding ProfileIdle}" />
+            </Grid>
+            <TextBlock Text="{Binding ProfileInfo}" Classes="muted mono" FontSize="11" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,4">
+              <TextBlock Text="Deskripsi profil" Classes="label" />
+              <TextBlock Grid.Column="1" Text="{Binding ProfileCounter}" Classes="dim" VerticalAlignment="Center" />
+            </Grid>
+            <TextBox Text="{Binding ProfileDescription}" AcceptsReturn="True" TextWrapping="Wrap" Height="92" MaxLength="1000" Watermark="Deskripsi di halaman profil Roblox" VerticalContentAlignment="Top" />
+            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+              <TextBlock Text="{Binding ProfileStatus}" IsVisible="{Binding HasProfileStatus}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <Button Grid.Column="1" Content="Simpan ke Roblox" Command="{Binding ProfileSaveCommand}" IsEnabled="{Binding ProfileIdle}" />
+            </Grid>
+          </StackPanel>
+          </Grid>
           <Border Height="1" Background="{StaticResource LineBrush}" />
           <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="24,14">
             <Button Content="{Binding DeleteText}" Command="{Binding EditDeleteCommand}" Foreground="{StaticResource RedBrush}" />
@@ -727,6 +824,87 @@
             <Button Grid.Column="1" Content="Batal" Command="{Binding CancelDisableCommand}" IsEnabled="{Binding DisableIdle}" MinWidth="96" Margin="0,0,10,0" />
             <Button Grid.Column="2" Classes="danger" Content="Tutup lainnya &amp; OFF" Command="{Binding ConfirmDisableCommand}" IsEnabled="{Binding DisableIdle}" MinWidth="150" />
           </Grid>
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <!-- ================= EKSPOR / IMPOR ================= -->
+    <Border Grid.ColumnSpan="2" IsVisible="{Binding IsTransferOpen}" Background="#B0050710">
+      <Border Width="480" Background="#141A2C" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="16"
+              HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 20 60 0 #C0000000">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,Auto" Margin="24,22,18,16">
+            <StackPanel>
+              <TextBlock Text="{Binding TransferTitle}" FontSize="19" FontWeight="Bold" />
+              <TextBlock Text="{Binding TransferSubtitle}" Classes="muted" TextWrapping="Wrap" Margin="0,4,0,0" />
+            </StackPanel>
+            <Button Grid.Column="1" Classes="icon" Width="30" Height="30" FontSize="12" Content="✕" Command="{Binding CloseTransferCommand}" VerticalAlignment="Top" />
+          </Grid>
+          <Border Height="1" Background="{StaticResource LineBrush}" />
+          <StackPanel Margin="24,12,24,18" Spacing="2">
+            <StackPanel IsVisible="{Binding IsImportMode}">
+              <TextBlock Text="File" Classes="label" />
+              <Grid ColumnDefinitions="*,8,Auto">
+                <Border Background="{StaticResource InputBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8" Padding="12,0" Height="38">
+                  <TextBlock Text="{Binding TransferFileText}" Classes="muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                </Border>
+                <Button Grid.Column="2" Content="Pilih file…" Command="{Binding TransferChooseFileCommand}" />
+              </Grid>
+            </StackPanel>
+            <TextBlock Text="Password file" Classes="label" />
+            <TextBox Text="{Binding TransferPassword}" PasswordChar="•" Watermark="minimal 6 karakter" />
+            <StackPanel IsVisible="{Binding IsExportMode}">
+              <TextBlock Text="Ulangi password" Classes="label" />
+              <TextBox Text="{Binding TransferPassword2}" PasswordChar="•" />
+              <CheckBox Content="{Binding TransferSelectedText}" IsChecked="{Binding TransferOnlySelected}" Margin="0,10,0,0" />
+              <TextBlock Text="File berisi cookie login. Simpan di tempat aman dan jangan bagikan; password tidak bisa dipulihkan." Classes="dim" TextWrapping="Wrap" Margin="0,6,0,0" />
+            </StackPanel>
+            <TextBlock Text="{Binding TransferStatus}" IsVisible="{Binding HasTransferStatus}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0" />
+          </StackPanel>
+          <Border Height="1" Background="{StaticResource LineBrush}" />
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="24,14">
+            <Button Grid.Column="1" Content="Batal" Command="{Binding CloseTransferCommand}" IsEnabled="{Binding TransferIdle}" MinWidth="96" Margin="0,0,10,0" />
+            <Button Grid.Column="2" Classes="primary" Content="{Binding TransferRunText}" Command="{Binding TransferRunCommand}" IsEnabled="{Binding TransferIdle}" MinWidth="130" />
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <!-- ================= SEARCH GLOBAL (Ctrl+K) ================= -->
+    <Border x:Name="PaletteOverlay" Grid.ColumnSpan="2" IsVisible="{Binding IsPaletteOpen}" Background="#90050710">
+      <Border Width="620" Background="#141A2C" BorderBrush="#463C8C" BorderThickness="1" CornerRadius="14"
+              HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0" BoxShadow="0 20 60 0 #C0000000">
+        <StackPanel>
+          <Grid ColumnDefinitions="Auto,*" Margin="18,6,18,6">
+            <TextBlock Text="⌕" FontSize="17" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+            <TextBox x:Name="PaletteBox" Grid.Column="1" Classes="bare" Text="{Binding PaletteQuery}" Watermark="Cari akun, game, Job ID, atau username untuk di-follow…" />
+          </Grid>
+          <Border Height="1" Background="{StaticResource LineBrush}" />
+          <TextBlock Text="Tidak ada hasil." Classes="muted" IsVisible="{Binding PaletteEmpty}" Margin="20,14" />
+          <ItemsControl ItemsSource="{Binding PaletteItems}" Margin="8,6">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CommandItem">
+                <Button Classes="row prow" Classes.current="{Binding IsCurrent}" Click="OnPaletteItemClick" CornerRadius="8" Margin="0,1">
+                  <Grid ColumnDefinitions="Auto,*,Auto" Margin="10,7">
+                    <Border Width="30" Height="30" CornerRadius="8" Background="#1F2640" ClipToBounds="True">
+                      <Panel>
+                        <TextBlock Text="{Binding Icon}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding NoImage}" />
+                        <Image Source="{Binding Image}" Stretch="UniformToFill" IsVisible="{Binding HasImage}" />
+                      </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Subtitle}" Classes="dim" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding Kind}" Classes="dim" VerticalAlignment="Center" />
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="18,8">
+            <TextBlock Text="↑↓ pilih  •  Enter jalankan  •  Esc tutup" Classes="dim" FontSize="10" />
+          </Border>
         </StackPanel>
       </Border>
     </Border>

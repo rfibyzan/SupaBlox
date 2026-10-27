@@ -74,6 +74,7 @@ public sealed partial class MainViewModel
             DisableStatus = $"Menutup {others.Count} Roblox lain…";
             foreach (var pid in others)
             {
+                MarkIntentionalClose(pid);
                 try { using var p = Process.GetProcessById(pid); p.CloseMainWindow(); } catch { }
             }
             // Tunggu sampai semua tertutup (maks 15 detik). WM_CLOSE saja, tidak kill paksa.
@@ -256,6 +257,7 @@ public sealed partial class MainViewModel
         try
         {
             using var p = Process.GetProcessById(i.Pid);
+            MarkIntentionalClose(i.Pid);
             if (!p.CloseMainWindow()) ShowMessage("Jendela Roblox tidak merespons. Tutup manual dari taskbar.", true);
             else ShowMessage($"Permintaan tutup dikirim ke PID {i.Pid}.");
         }

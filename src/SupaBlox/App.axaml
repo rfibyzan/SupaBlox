@@ -186,6 +186,58 @@
       <Setter Property="BorderThickness" Value="0" />
     </Style>
 
+    <!-- Chip grup -->
+    <Style Selector="Button.gchip">
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="CornerRadius" Value="15" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    </Style>
+    <Style Selector="Button.gchip TextBlock.count">
+      <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="Button.gchip.on /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2A2560" />
+      <Setter Property="BorderBrush" Value="#7C5CFF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.gchip.on TextBlock.count">
+      <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+    </Style>
+    <Style Selector="Button.gchip.drop /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#14302C" />
+      <Setter Property="BorderBrush" Value="#34D399" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Search title bar & palette -->
+    <Style Selector="Button.search">
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Background" Value="#161C2E" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.prow.current /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#201E40" />
+    </Style>
+    <Style Selector="TextBox.bare">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="Padding" Value="10,12" />
+    </Style>
+    <Style Selector="TextBox.bare:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.bare:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
     <!-- Tombol title bar -->
     <Style Selector="Button.caption">
       <Setter Property="Width" Value="46" />

@@ -7,7 +7,6 @@ public sealed partial class MainViewModel
 {
     public ObservableCollection<AccountItem> AllAccounts { get; } = new();
     public ObservableCollection<AccountItem> VisibleAccounts { get; } = new();
-    public ObservableCollection<string> GroupOptions { get; } = new() { "Semua grup" };
     public string[] StatusOptions { get; } = { "Semua status", "Berjalan", "Online / di game", "Offline", "Bermasalah" };
 
     public RelayCommand OpenAddCommand { get; private set; } = null!;
@@ -76,7 +75,16 @@ public sealed partial class MainViewModel
     public int StatusFilter { get => _statusFilter; set { if (Set(ref _statusFilter, value)) RebuildVisibleAccounts(); } }
 
     private string? _groupFilter = "Semua grup";
-    public string? GroupFilter { get => _groupFilter; set { if (Set(ref _groupFilter, value)) RebuildVisibleAccounts(); } }
+    public string? GroupFilter
+    {
+        get => _groupFilter;
+        set
+        {
+            if (!Set(ref _groupFilter, value)) return;
+            foreach (var c in GroupChips) c.IsActive = c.Name == (value ?? AllGroupsName);
+            RebuildVisibleAccounts();
+        }
+    }
 
     public void RebuildVisibleAccounts()
     {
@@ -86,7 +94,9 @@ public sealed partial class MainViewModel
             list = list.Where(a => a.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                                    a.Model.Username.Contains(q, StringComparison.OrdinalIgnoreCase) ||
                                    a.Model.Note.Contains(q, StringComparison.OrdinalIgnoreCase));
-        if (_groupFilter is { } g && g != "Semua grup")
+        if (_groupFilter == NoGroupName)
+            list = list.Where(a => string.IsNullOrWhiteSpace(a.Model.Group));
+        else if (_groupFilter is { } g && g != AllGroupsName)
             list = list.Where(a => a.Model.Group == g);
         list = _statusFilter switch
         {
@@ -107,13 +117,13 @@ public sealed partial class MainViewModel
 
     private void RebuildGroups()
     {
-        var current = _groupFilter;
-        var groups = AllAccounts.Select(a => a.Model.Group).Where(g => !string.IsNullOrWhiteSpace(g)).Distinct().OrderBy(g => g).ToList();
-        GroupOptions.Clear();
-        GroupOptions.Add("Semua grup");
-        foreach (var g in groups) GroupOptions.Add(g);
-        _groupFilter = current != null && GroupOptions.Contains(current) ? current : "Semua grup";
-        OnPropertyChanged(nameof(GroupFilter));
+        var names = AllGroupNames();
+        if (_groupFilter is { } cur && cur != AllGroupsName && cur != NoGroupName && !names.Contains(cur))
+        {
+            _groupFilter = AllGroupsName;
+            OnPropertyChanged(nameof(GroupFilter));
+        }
+        RebuildGroupChips();
     }
 
     // ---------- Seleksi ----------
@@ -170,6 +180,7 @@ public sealed partial class MainViewModel
                     var cookie = Dpapi.Unprotect(a.Model.CookieProtected);
                     var p = (await _api.GetPresenceAsync(cookie, new[] { a.Model.UserId })).FirstOrDefault();
                     if (p == null) { a.SetPresence(AccountState.Unknown, "Status tidak diketahui"); continue; }
+                    RememberServer(a, p);
                     switch (p.Type)
                     {
                         case 2: a.SetPresence(AccountState.InGame, "Di game" + (string.IsNullOrWhiteSpace(p.Location) ? "" : " • " + p.Location)); break;
@@ -230,7 +241,7 @@ public sealed partial class MainViewModel
     {
         AddTab = tab;
         AddCookie = AddBulk = AddPlace = AddNote = AddStatus = "";
-        AddGroup = _groupFilter is { } g && g != "Semua grup" ? g : "";
+        AddGroup = _groupFilter is { } g && g != AllGroupsName && g != NoGroupName ? g : "";
         IsAddOpen = true;
     }
 
@@ -378,6 +389,17 @@ public sealed partial class MainViewModel
         EditPlace = item.Model.DefaultPlaceId?.ToString() ?? "";
         EditNote = item.Model.Note;
         EditFavorite = item.Model.Favorite;
+        EditWatch = item.Model.Watch;
+        EditAutoRelaunch = item.Model.AutoRelaunch;
+        EditRelaunchDelay = item.Model.RelaunchDelaySec;
+        EditMaxRelaunch = item.Model.MaxRelaunch;
+        EditRelaunchNormal = item.Model.RelaunchOnNormalClose;
+        EditRejoin = item.Model.RejoinSameServer;
+        ProfileDescription = "";
+        _profileLoaded = false;
+        ProfileStatus = "";
+        Notify(nameof(ProfileInfo));
+        _ = LoadProfileAsync(item, silent: true);
         EditCookie = "";
         EditStatus = "";
         ConfirmDelete = false;
@@ -415,12 +437,93 @@ public sealed partial class MainViewModel
         m.Group = EditGroup.Trim();
         m.Note = EditNote.Trim();
         m.Favorite = EditFavorite;
+        m.Watch = EditWatch;
+        m.AutoRelaunch = EditWatch && EditAutoRelaunch;
+        m.RelaunchDelaySec = (int)Math.Clamp(EditRelaunchDelay ?? 10, 0, 600);
+        m.MaxRelaunch = (int)Math.Clamp(EditMaxRelaunch ?? 3, 1, 50);
+        m.RelaunchOnNormalClose = EditRelaunchNormal;
+        m.RejoinSameServer = EditRejoin;
+        if (m.Watch && item.RunningPid is int runPid) WatchPid(runPid, item);
+        _relaunchCount.Remove(m.Id);
+        if (!string.IsNullOrWhiteSpace(m.Group) && !_settings.Groups.Contains(m.Group)) { _settings.Groups.Add(m.Group); QueueSave(); }
         SaveAccounts();
         item.RefreshTexts();
         RebuildGroups();
         RebuildVisibleAccounts();
         IsEditOpen = false;
         ShowMessage($"Akun {item.Name} disimpan.");
+    }
+
+    // Watch + auto-relaunch (dialog edit)
+    private bool _editWatch, _editAutoRelaunch, _editRelaunchNormal, _editRejoin = true;
+    private decimal? _editRelaunchDelay = 10, _editMaxRelaunch = 3;
+    public bool EditWatch { get => _editWatch; set => Set(ref _editWatch, value); }
+    public bool EditAutoRelaunch { get => _editAutoRelaunch; set => Set(ref _editAutoRelaunch, value); }
+    public bool EditRelaunchNormal { get => _editRelaunchNormal; set => Set(ref _editRelaunchNormal, value); }
+    public bool EditRejoin { get => _editRejoin; set => Set(ref _editRejoin, value); }
+    public decimal? EditRelaunchDelay { get => _editRelaunchDelay; set => Set(ref _editRelaunchDelay, value); }
+    public decimal? EditMaxRelaunch { get => _editMaxRelaunch; set => Set(ref _editMaxRelaunch, value); }
+
+    // Profil Roblox (dialog edit)
+    private string _profileDescription = "", _profileStatus = "";
+    private bool _profileLoaded, _profileBusy;
+    public string ProfileDescription { get => _profileDescription; set { if (Set(ref _profileDescription, value)) Notify(nameof(ProfileCounter)); } }
+    public string ProfileCounter => $"{_profileDescription.Length}/1000";
+    public string ProfileStatus { get => _profileStatus; set { if (Set(ref _profileStatus, value)) Notify(nameof(HasProfileStatus)); } }
+    public bool HasProfileStatus => _profileStatus.Length > 0;
+    public bool ProfileIdle => !_profileBusy;
+    public string ProfileInfo => _editing is not { } e ? "" :
+        $"ID {e.Model.UserId}" + (e.Model.CreatedUtc is DateTime c ? $"  •  dibuat {c.ToLocalTime():d MMM yyyy}" : "");
+
+    private RelayCommand? _profileRefresh, _profileSave;
+    public RelayCommand ProfileRefreshCommand => _profileRefresh ??= new RelayCommand(() => _editing is { } e ? LoadProfileAsync(e, silent: false) : Task.CompletedTask);
+    public RelayCommand ProfileSaveCommand => _profileSave ??= new RelayCommand(SaveDescriptionAsync);
+
+    private void SetProfileBusy(bool v) { _profileBusy = v; Notify(nameof(ProfileIdle)); }
+
+    /// <summary>Refresh profil publik (nama, display name, tanggal dibuat) + deskripsi akun.</summary>
+    private async Task LoadProfileAsync(AccountItem item, bool silent)
+    {
+        if (!OperatingSystem.IsWindows() && silent) return;
+        SetProfileBusy(true);
+        if (!silent) ProfileStatus = "Mengambil profil…";
+        try
+        {
+            var (user, created) = await _api.GetUserInfoAsync(item.Model.UserId);
+            bool changed = user.Name.Length > 0 && (user.Name != item.Model.Username || user.DisplayName != item.Model.DisplayName);
+            if (user.Name.Length > 0) item.Model.Username = user.Name;
+            if (user.DisplayName.Length > 0) item.Model.DisplayName = user.DisplayName;
+            item.Model.CreatedUtc = created;
+            var cookie = Dpapi.Unprotect(item.Model.CookieProtected);
+            var desc = await _api.GetDescriptionAsync(cookie);
+            if (_editing == item) { ProfileDescription = desc; _profileLoaded = true; }
+            SaveAccounts();
+            item.RefreshTexts();
+            if (changed) RebuildVisibleAccounts();
+            Notify(nameof(ProfileInfo));
+            if (_editing == item) ProfileStatus = silent ? "" : changed ? "Profil diperbarui (nama berubah)." : "Profil diperbarui.";
+        }
+        catch (CookieExpiredException) { item.SetPresence(AccountState.Expired, "Cookie kedaluwarsa"); if (_editing == item) ProfileStatus = "Cookie kedaluwarsa, deskripsi tidak bisa dibaca."; }
+        catch (Exception ex) { Storage.Log("profile", ex); if (_editing == item && !silent) ProfileStatus = "Gagal: " + FriendlyError(ex); }
+        finally { SetProfileBusy(false); }
+    }
+
+    private async Task SaveDescriptionAsync()
+    {
+        if (_editing is not { } item) return;
+        if (!_profileLoaded) { ProfileStatus = "Ambil profil dulu agar deskripsi lama tidak tertimpa tanpa sengaja."; return; }
+        if (_profileDescription.Length > 1000) { ProfileStatus = "Maksimal 1000 karakter."; return; }
+        SetProfileBusy(true);
+        ProfileStatus = "Menyimpan ke Roblox…";
+        try
+        {
+            var cookie = Dpapi.Unprotect(item.Model.CookieProtected);
+            var saved = await _api.SetDescriptionAsync(cookie, _profileDescription);
+            ProfileStatus = saved != _profileDescription ? "Tersimpan, tapi sebagian teks difilter Roblox." : "Deskripsi tersimpan di Roblox.";
+            if (_editing == item) ProfileDescription = saved;
+        }
+        catch (Exception ex) { Storage.Log("set description", ex); ProfileStatus = FriendlyError(ex); }
+        finally { SetProfileBusy(false); }
     }
 
     private void EditDelete()

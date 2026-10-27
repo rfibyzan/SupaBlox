@@ -11,7 +11,7 @@ namespace SupaBlox.ViewModels;
 /// </summary>
 public sealed partial class MainViewModel : ObservableObject
 {
-    public const string Version = "0.2.1";
+    public const string Version = "0.3.0";
 
     private readonly RobloxApi _api = new();
     private readonly AppSettings _settings;
