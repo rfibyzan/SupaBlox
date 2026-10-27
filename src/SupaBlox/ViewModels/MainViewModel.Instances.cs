@@ -151,6 +151,7 @@ public sealed partial class MainViewModel
 
     private void UpdateUptime()
     {
+        foreach (var i in Instances) i.UpdateUptime();
         if (_multiSince is not { } since) return;
         var d = DateTime.Now - since;
         UptimeText = $"{(int)d.TotalHours:00}:{d.Minutes:00}:{d.Seconds:00}";
@@ -203,6 +204,7 @@ public sealed partial class MainViewModel
                 {
                     item = new InstanceItem(p.Id, this);
                     try { item.StartTime = p.StartTime; item.StartText = p.StartTime.ToString("HH:mm:ss"); } catch { }
+                    item.UpdateUptime();
                     Instances.Add(item);
                 }
                 try { p.Refresh(); item.RamText = $"{p.WorkingSet64 / (1024 * 1024):N0} MB"; } catch { }

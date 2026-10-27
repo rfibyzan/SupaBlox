@@ -208,6 +208,17 @@ public sealed class InstanceItem : ObservableObject
     public string StartText { get; set; } = "—";
     public DateTime? StartTime { get; set; }
 
+    private string _uptime = "—";
+    /// <summary>Lama proses berjalan, format jj:mm:dd.</summary>
+    public string UptimeText { get => _uptime; private set => Set(ref _uptime, value); }
+    public void UpdateUptime()
+    {
+        if (StartTime is not { } t) { UptimeText = "—"; return; }
+        var d = DateTime.Now - t;
+        if (d < TimeSpan.Zero) d = TimeSpan.Zero;
+        UptimeText = $"{(int)d.TotalHours:00}:{d.Minutes:00}:{d.Seconds:00}";
+    }
+
     private string _ram = "";
     public string RamText { get => _ram; set => Set(ref _ram, value); }
 
