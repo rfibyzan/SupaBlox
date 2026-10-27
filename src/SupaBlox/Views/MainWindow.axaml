@@ -6,23 +6,40 @@
         Title="{Binding Title}"
         Icon="/Assets/supablox.ico"
         Width="1440" Height="900" MinWidth="1180" MinHeight="740"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="40"
+        Padding="{Binding $self.OffScreenMargin}">
+
+  <DockPanel>
+  <!-- ================= TITLE BAR ================= -->
+  <Border x:Name="TitleBar" DockPanel.Dock="Top" Height="40" Background="{StaticResource SideBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
+        <Image Source="/Assets/supablox.png" Width="22" Height="22" />
+        <TextBlock Text="SupaBlox" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+        <TextBlock Text="Multi Roblox &amp; account manager" Classes="dim" VerticalAlignment="Center" />
+      </StackPanel>
+      <Border Grid.Column="2" CornerRadius="10" Padding="10,3" Margin="0,0,12,0" VerticalAlignment="Center" Background="{Binding MultiBadgeBg}" IsHitTestVisible="False">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Ellipse Width="6" Height="6" Fill="{Binding MultiBadgeFg}" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding MultiBadge, StringFormat='MULTI {0}'}" Foreground="{Binding MultiBadgeFg}" FontSize="10" FontWeight="Bold" />
+        </StackPanel>
+      </Border>
+      <StackPanel Grid.Column="3" Orientation="Horizontal">
+        <Button Classes="caption" Content="—" Click="OnMinimize" ToolTip.Tip="Minimize" />
+        <Button Classes="caption" Content="▢" Click="OnMaximize" ToolTip.Tip="Maximize" />
+        <Button Classes="caption close" Content="✕" Click="OnClose" ToolTip.Tip="Tutup" />
+      </StackPanel>
+    </Grid>
+  </Border>
 
   <Grid ColumnDefinitions="240,*">
 
     <!-- ================= SIDEBAR ================= -->
     <Border Grid.Column="0" Background="{StaticResource SideBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
-      <DockPanel Margin="12,20,12,14">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="10,0,0,26">
-          <Border Width="38" Height="38" CornerRadius="10" Background="{StaticResource AccentGrad}">
-            <TextBlock Text="S" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
-          </Border>
-          <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="SupaBlox" FontSize="18" FontWeight="Bold" />
-            <TextBlock Text="ACCOUNT MANAGER" Classes="dim" FontSize="9" LetterSpacing="1" />
-          </StackPanel>
-        </StackPanel>
-
+      <DockPanel Margin="12,18,12,14">
         <Border DockPanel.Dock="Bottom" Classes="card" Padding="14,12">
           <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
@@ -378,10 +395,14 @@
                   </Border>
                   <Button Grid.Column="2" Classes="primary" Content="▶  Join server acak" Command="{Binding JoinRandomCommand}" />
                 </Grid>
-                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,18,0,8">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,18,0,8">
                   <TextBlock Text="Server publik" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
-                  <TextBlock Grid.Column="1" Text="{Binding ServerInfo}" Classes="muted" FontSize="11" Margin="12,0" VerticalAlignment="Center" />
-                  <Button Grid.Column="2" Content="⟳  Refresh server" Command="{Binding RefreshServersCommand}" FontSize="12" />
+                  <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ServerInfo}" Classes="muted" FontSize="11" />
+                    <TextBlock Text="{Binding RegionInfo}" Classes="dim" FontSize="10" />
+                  </StackPanel>
+                  <ComboBox Grid.Column="2" ItemsSource="{Binding RegionOptions}" SelectedItem="{Binding RegionFilter}" MinWidth="170" Margin="0,0,10,0" />
+                  <Button Grid.Column="3" Content="⟳  Refresh server" Command="{Binding RefreshServersCommand}" FontSize="12" />
                 </Grid>
               </StackPanel>
               <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -390,11 +411,13 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:ServerItem">
                         <Border Classes="card2" Padding="16,10" Margin="0,0,0,8">
-                          <Grid ColumnDefinitions="*,110,Auto">
+                          <Grid ColumnDefinitions="*,110,Auto,Auto,Auto">
                             <StackPanel VerticalAlignment="Center" Spacing="4">
                               <StackPanel Orientation="Horizontal" Spacing="7">
                                 <Ellipse Width="8" Height="8" Fill="{Binding PingBrush}" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding PingText}" FontWeight="Bold" FontSize="12" />
+                                <TextBlock Text="•" Classes="dim" />
+                                <TextBlock Text="{Binding RegionText}" Foreground="{StaticResource AccentTextBrush}" FontSize="11" VerticalAlignment="Center" />
                               </StackPanel>
                               <TextBlock Text="{Binding JobId}" Classes="muted mono" FontSize="10" />
                             </StackPanel>
@@ -402,7 +425,11 @@
                               <TextBlock Text="{Binding PlayersText}" FontSize="11" />
                               <ProgressBar Classes="slot" Value="{Binding Fill}" Minimum="0" Maximum="100" />
                             </StackPanel>
-                            <Button Grid.Column="2" Classes="primary" Content="Join" Command="{Binding JoinCommand}" MinWidth="72" />
+                            <Button Grid.Column="2" Classes="icon" Width="34" Height="34" FontSize="13" Command="{Binding CopyCommand}" ToolTip.Tip="Salin Job ID">
+                              <PathIcon Width="13" Height="13" Data="M8,2 H20 A2,2 0 0 1 22,4 V16 A2,2 0 0 1 20,18 H18 V16 H20 V4 H8 V6 H6 V4 A2,2 0 0 1 8,2 Z M4,6 H16 A2,2 0 0 1 18,8 V20 A2,2 0 0 1 16,22 H4 A2,2 0 0 1 2,20 V8 A2,2 0 0 1 4,6 Z M4,8 V20 H16 V8 Z" />
+                            </Button>
+                            <Button Grid.Column="3" Classes="icon" Width="34" Height="34" FontSize="13" Content="⚡" Command="{Binding UseCommand}" ToolTip.Tip="Pakai Job ID di Kontrol Cepat" Margin="8,0" />
+                            <Button Grid.Column="4" Classes="primary" Content="Join" Command="{Binding JoinCommand}" MinWidth="72" />
                           </Grid>
                         </Border>
                       </DataTemplate>
@@ -657,4 +684,5 @@
       </Border>
     </Border>
   </Grid>
+  </DockPanel>
 </Window>

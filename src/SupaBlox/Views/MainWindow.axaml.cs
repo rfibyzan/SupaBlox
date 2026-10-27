@@ -12,6 +12,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         PickerBox.KeyDown += OnPickerKeyDown;
+        TitleBar.PointerPressed += (_, e) =>
+        {
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+            if (e.ClickCount == 2) ToggleMax();
+            else BeginMoveDrag(e);
+        };
         DataContextChanged += (_, _) =>
         {
             if (DataContext is MainViewModel vm)
@@ -47,6 +53,13 @@ public partial class MainWindow : Window
         base.OnClosing(e);
         if (!e.Cancel) ExitRequested?.Invoke();
     }
+
+    private void ToggleMax() =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnMinimize(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void OnMaximize(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => ToggleMax();
+    private void OnClose(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close();
 
     public void ShowFromTray()
     {

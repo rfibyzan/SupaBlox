@@ -159,21 +159,30 @@ public sealed class GameItem : ObservableObject
     public bool IsCurrent { get => _isCurrent; set => Set(ref _isCurrent, value); }
 }
 
-public sealed class ServerItem
+public sealed class ServerItem : ObservableObject
 {
-    public ServerItem(ServerInfo s, Action<ServerItem> onJoin)
+    public ServerItem(ServerInfo s, Action<ServerItem> onJoin, Action<ServerItem> onCopy, Action<ServerItem> onUse)
     {
         Info = s;
         JoinCommand = new RelayCommand(() => onJoin(this));
+        CopyCommand = new RelayCommand(() => onCopy(this));
+        UseCommand = new RelayCommand(() => onUse(this));
     }
 
     public ServerInfo Info { get; }
     public RelayCommand JoinCommand { get; }
+    public RelayCommand CopyCommand { get; }
+    public RelayCommand UseCommand { get; }
     public string JobId => Info.JobId;
     public string PingText => Info.Ping > 0 ? $"{Info.Ping} ms" : "? ms";
     public IBrush PingBrush => Info.Ping <= 0 ? Palette.Dim : Info.Ping < 60 ? Palette.Green : Info.Ping < 120 ? Palette.Yellow : Palette.Red;
     public string PlayersText => $"{Info.Playing} / {Info.MaxPlayers}";
     public double Fill => Info.MaxPlayers > 0 ? 100.0 * Info.Playing / Info.MaxPlayers : 0;
+
+    /// <summary>null = belum dicek.</summary>
+    private string? _region;
+    public string? Region { get => _region; set { if (Set(ref _region, value)) Notify(nameof(RegionText)); } }
+    public string RegionText => _region ?? "region…";
 }
 
 public sealed class InstanceItem : ObservableObject

@@ -2,11 +2,13 @@
 
 Multi-instance Roblox + account manager untuk Windows (C# .NET 8 + Avalonia), hasil reverse engineering mekanisme Astro Account Manager.
 
-## Fitur (v0.2.0)
+## Fitur (v0.2.1)
 - **Akun**: tambah lewat login browser (Edge/Chrome, profil sementara), tempel cookie, atau impor massal. Cookie `.ROBLOSECURITY` disimpan terenkripsi DPAPI (hanya akun Windows kamu yang bisa membuka). Grup, alias, catatan, favorit, game default, status presence.
 - **Kontrol Cepat**: pilih game dengan **mengetik nama** (atau tempel Place ID / link), opsional Job ID atau link server privat, lalu launch banyak akun sekaligus dengan jeda dan batas instance. Semua isian tersimpan otomatis dan tidak reset saat pindah tab atau restart.
-- **Game & server**: cari game, lihat server publik (ping, slot), Join ke server tertentu atau server acak dengan akun yang dicentang.
+- **Game & server**: cari game, lihat server publik (ping, slot, **region**), filter per region, salin Job ID, pakai Job ID di Kontrol Cepat, Join ke server tertentu atau server acak dengan akun yang dicentang.
+  Region dicek lewat `gamejoin.roblox.com` (alamat IP server, tanpa membuka Roblox) memakai cookie akun pertama yang dicentang, lalu IP digeolokasi lewat ip-api.com.
 - **Instance**: Multi Roblox ON/OFF (status mutex/event), daftar RobloxPlayerBeta (PID, akun, mulai, RAM, judul), Fokus, Tutup (graceful).
+- Title bar custom, logo baru.
 - Tray, mulai bersama Windows, nyalakan Multi Roblox otomatis.
 - Font **Builder Sans** dimuat dari instalasi Roblox Player di PC kamu (`%LocalAppData%\Roblox\Versions\*\content\fonts`). Font ini tidak dibundel karena lisensinya; kalau tidak ada, UI memakai Inter.
 

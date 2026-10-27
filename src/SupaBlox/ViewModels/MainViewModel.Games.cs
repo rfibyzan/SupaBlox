@@ -133,6 +133,23 @@ public sealed partial class MainViewModel
 
     // ---------- Server ----------
 
+    private readonly List<ServerItem> _allServers = new();
+    private readonly Dictionary<string, string> _regionByJob = new();
+    private readonly Dictionary<string, string> _regionByIp = new();
+    private CancellationTokenSource? _regionCts;
+    public const string AllRegions = "Semua region";
+    public ObservableCollection<string> RegionOptions { get; } = new() { AllRegions };
+
+    private string _regionFilter = AllRegions;
+    public string RegionFilter
+    {
+        get => _regionFilter;
+        set { if (Set(ref _regionFilter, value ?? AllRegions)) ApplyServerFilter(); }
+    }
+
+    private string _regionInfo = "";
+    public string RegionInfo { get => _regionInfo; set => Set(ref _regionInfo, value); }
+
     private string? _serverCursor;
     private bool _loadingServers;
     public bool LoadingServers { get => _loadingServers; set => Set(ref _loadingServers, value); }
@@ -146,16 +163,31 @@ public sealed partial class MainViewModel
         LoadingServers = true;
         try
         {
-            if (reset) { Servers.Clear(); _serverCursor = null; }
+            if (reset)
+            {
+                _regionCts?.Cancel();
+                _allServers.Clear();
+                Servers.Clear();
+                _serverCursor = null;
+                RegionInfo = "";
+                _regionFilter = AllRegions;
+                OnPropertyChanged(nameof(RegionFilter));
+                while (RegionOptions.Count > 1) RegionOptions.RemoveAt(RegionOptions.Count - 1);
+            }
             ServerInfo = "memuat…";
             var (list, next) = await _api.GetServersAsync(game.Model.PlaceId, reset ? null : _serverCursor);
             if (_selectedGame != game) return;
             _serverCursor = next;
-            var merged = Servers.Select(s => s.Info).Concat(list).GroupBy(s => s.JobId).Select(g => g.First())
-                .OrderBy(s => s.Ping <= 0 ? int.MaxValue : s.Ping).ToList();
-            Servers.Clear();
-            foreach (var s in merged) Servers.Add(new ServerItem(s, JoinServer));
-            ServerInfo = $"{Servers.Count} terlihat";
+            var known = _allServers.Select(x => x.JobId).ToHashSet();
+            foreach (var info in list.Where(x => known.Add(x.JobId)))
+            {
+                var item = new ServerItem(info, JoinServer, CopyJobId, UseJobInQuick);
+                if (_regionByJob.TryGetValue(info.JobId, out var r)) item.Region = r;
+                _allServers.Add(item);
+            }
+            _allServers.Sort((a, b) => (a.Info.Ping <= 0 ? int.MaxValue : a.Info.Ping).CompareTo(b.Info.Ping <= 0 ? int.MaxValue : b.Info.Ping));
+            ApplyServerFilter();
+            _ = ResolveRegionsAsync(game);
         }
         catch (Exception ex) { Storage.Log("servers", ex); ServerInfo = "gagal"; ShowMessage(FriendlyError(ex), true); }
         finally
@@ -164,6 +196,105 @@ public sealed partial class MainViewModel
             OnPropertyChanged(nameof(HasMoreServers));
             LoadMoreServersCommand.Refresh();
         }
+    }
+
+    private void ApplyServerFilter()
+    {
+        Servers.Clear();
+        foreach (var s in _allServers)
+            if (_regionFilter == AllRegions || s.Region == _regionFilter) Servers.Add(s);
+        ServerInfo = _regionFilter == AllRegions ? $"{_allServers.Count} terlihat" : $"{Servers.Count} dari {_allServers.Count}";
+    }
+
+    private void UpdateRegionOptions()
+    {
+        var regions = _allServers.Where(s => !string.IsNullOrEmpty(s.Region) && s.Region != "?")
+            .GroupBy(s => s.Region!).OrderByDescending(g => g.Count()).Select(g => g.Key).ToList();
+        foreach (var r in regions.Where(r => !RegionOptions.Contains(r))) RegionOptions.Add(r);
+    }
+
+    /// <summary>Cek region tiap server: gamejoin (alamat IP server) lalu geolokasi IP.</summary>
+    private async Task ResolveRegionsAsync(GameItem game)
+    {
+        var acc = SelectedAccounts.Concat(AllAccounts).FirstOrDefault(a => a.State != AccountState.Expired);
+        if (acc == null) { RegionInfo = "tambah akun untuk cek region"; return; }
+        string cookie;
+        try { cookie = Dpapi.Unprotect(acc.Model.CookieProtected); }
+        catch { RegionInfo = "cookie tidak bisa dibuka"; return; }
+
+        _regionCts?.Cancel();
+        var cts = _regionCts = new CancellationTokenSource();
+        var ct = cts.Token;
+        var pending = _allServers.Where(s => s.Region == null).ToList();
+        int done = _allServers.Count - pending.Count, total = _allServers.Count;
+        var gate = new SemaphoreSlim(3);
+        try
+        {
+            foreach (var chunk in pending.Chunk(12))
+            {
+                if (ct.IsCancellationRequested) return;
+                RegionInfo = $"cek region {done}/{total}";
+                var ipByJob = new Dictionary<ServerItem, string>();
+                await Task.WhenAll(chunk.Select(async s =>
+                {
+                    await gate.WaitAsync(ct);
+                    try
+                    {
+                        for (int attempt = 0; attempt < 3; attempt++)
+                        {
+                            try
+                            {
+                                var ip = await _api.GetServerAddressAsync(cookie, game.Model.PlaceId, s.JobId, ct);
+                                if (ip != null) lock (ipByJob) ipByJob[s] = ip;
+                                break;
+                            }
+                            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                            {
+                                await Task.Delay(2000 * (attempt + 1), ct);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (CookieExpiredException) { }
+                    catch (Exception ex) { Storage.Log("region " + s.JobId, ex); }
+                    finally { gate.Release(); }
+                }));
+                if (ct.IsCancellationRequested || _selectedGame != game) return;
+
+                var unknownIps = ipByJob.Values.Where(ip => !_regionByIp.ContainsKey(ip)).ToList();
+                if (unknownIps.Count > 0)
+                {
+                    try { foreach (var kv in await _api.GeolocateAsync(unknownIps, ct)) _regionByIp[kv.Key] = kv.Value; }
+                    catch (Exception ex) { Storage.Log("geo", ex); }
+                }
+                foreach (var s in chunk)
+                {
+                    string region = ipByJob.TryGetValue(s, out var ip) && _regionByIp.TryGetValue(ip, out var r) ? r : "?";
+                    s.Region = region;
+                    _regionByJob[s.JobId] = region;
+                }
+                done += chunk.Length;
+                UpdateRegionOptions();
+                if (_regionFilter != AllRegions) ApplyServerFilter();
+            }
+            RegionInfo = $"region via {acc.Name}";
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async void CopyJobId(ServerItem s)
+    {
+        if (CopyToClipboard == null) return;
+        await CopyToClipboard(s.JobId);
+        ShowMessage("Job ID disalin.");
+    }
+
+    private void UseJobInQuick(ServerItem s)
+    {
+        if (_selectedGame == null) return;
+        SetQuickGame(_selectedGame.Model);
+        QuickJobId = s.JobId;
+        ShowMessage($"Job ID dipakai di Kontrol Cepat ({_selectedGame.Name}).");
     }
 
     private void JoinServer(ServerItem s) => JoinSelectedGame(s.JobId);

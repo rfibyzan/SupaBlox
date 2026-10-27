@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>SupaBlox</AssemblyName>
     <RootNamespace>SupaBlox</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <InvariantGlobalization>true</InvariantGlobalization>

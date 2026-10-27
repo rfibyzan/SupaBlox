@@ -212,9 +212,57 @@ public sealed class RobloxApi
         catch { return null; }
     }
 
+    // ---------- Region server ----------
+
+    /// <summary>
+    /// Minta info join (tanpa membuka Roblox) untuk tahu alamat IP server game.
+    /// Hanya web API; tidak ada yang menyentuh proses Roblox.
+    /// </summary>
+    public async Task<string?> GetServerAddressAsync(string cookie, long placeId, string jobId, CancellationToken ct = default)
+    {
+        string body = "{\"placeId\":" + placeId + ",\"gameId\":\"" + jobId + "\",\"gameJoinAttemptId\":\"" + Guid.NewGuid() + "\",\"isTeleport\":false}";
+        using var res = await SendWithCsrfAsync(HttpMethod.Post, "https://gamejoin.roblox.com/v1/join-game-instance", cookie, body, ct, "Roblox/WinInet");
+        if (res.StatusCode == HttpStatusCode.Unauthorized) throw new CookieExpiredException();
+        if ((int)res.StatusCode == 429) throw new HttpRequestException("rate limit", null, HttpStatusCode.TooManyRequests);
+        if (!res.IsSuccessStatusCode) return null;
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+        if (!doc.RootElement.TryGetProperty("joinScript", out var js) || js.ValueKind != JsonValueKind.Object) return null;
+        if (js.TryGetProperty("UdmuxEndpoints", out var ud) && ud.ValueKind == JsonValueKind.Array && ud.GetArrayLength() > 0)
+        {
+            var a = Str(ud[0], "Address");
+            if (a.Length > 0) return a;
+        }
+        var m = Str(js, "MachineAddress");
+        return m.Length > 0 ? m : null;
+    }
+
+    /// <summary>IP -> "Kota, KODE" lewat ip-api.com (batch, maks 100 IP).</summary>
+    public async Task<Dictionary<string, string>> GeolocateAsync(IEnumerable<string> ips, CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, string>();
+        var list = ips.Distinct().Take(100).ToList();
+        if (list.Count == 0) return result;
+        var body = "[" + string.Join(",", list.Select(i => "\"" + i + "\"")) + "]";
+        using var req = new HttpRequestMessage(HttpMethod.Post, "http://ip-api.com/batch?fields=status,query,countryCode,city,regionName")
+        { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+        using var res = await _http.SendAsync(req, ct);
+        if (!res.IsSuccessStatusCode) return result;
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+        foreach (var e in doc.RootElement.EnumerateArray())
+        {
+            var ip = Str(e, "query");
+            if (Str(e, "status") != "success") { result[ip] = "?"; continue; }
+            var city = Str(e, "city");
+            if (city.Length == 0) city = Str(e, "regionName");
+            var cc = Str(e, "countryCode");
+            result[ip] = city.Length > 0 ? $"{city}, {cc}" : cc;
+        }
+        return result;
+    }
+
     // ---------- Helper ----------
 
-    private async Task<HttpResponseMessage> SendWithCsrfAsync(HttpMethod method, string url, string cookie, string jsonBody, CancellationToken ct)
+    private async Task<HttpResponseMessage> SendWithCsrfAsync(HttpMethod method, string url, string cookie, string jsonBody, CancellationToken ct, string? userAgent = null)
     {
         string? csrf = null;
         for (int attempt = 0; attempt < 2; attempt++)
@@ -224,6 +272,7 @@ public sealed class RobloxApi
                 Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
             };
             AddCookie(req, cookie);
+            if (userAgent != null) { req.Headers.UserAgent.Clear(); req.Headers.TryAddWithoutValidation("User-Agent", userAgent); }
             req.Headers.Referrer = new Uri("https://www.roblox.com/");
             req.Headers.TryAddWithoutValidation("Origin", "https://www.roblox.com");
             if (csrf != null) req.Headers.TryAddWithoutValidation("x-csrf-token", csrf);
