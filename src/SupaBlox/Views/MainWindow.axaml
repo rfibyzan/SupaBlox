@@ -506,7 +506,7 @@
                 <Grid ColumnDefinitions="90,180,150,100,*,300">
                   <TextBlock Text="PID" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="1" Text="Akun" Classes="muted" FontWeight="Bold" FontSize="11" />
-                  <TextBlock Grid.Column="2" Text="Mulai • lama jalan" Classes="muted" FontWeight="Bold" FontSize="11" />
+                  <TextBlock Grid.Column="2" Text="Mulai • uptime" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="3" Text="RAM" Classes="muted" FontWeight="Bold" FontSize="11" />
                   <TextBlock Grid.Column="4" Text="Judul jendela" Classes="muted" FontWeight="Bold" FontSize="11" />
                 </Grid>
@@ -526,7 +526,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
                           <TextBlock Text="{Binding StartText}" Classes="mono" FontSize="12" />
-                          <TextBlock Text="{Binding UptimeText, StringFormat='jalan {0}'}" Classes="dim" FontSize="11" />
+                          <TextBlock Text="{Binding UptimeText}" Classes="dim" FontSize="11" />
                         </StackPanel>
                         <TextBlock Grid.Column="3" Text="{Binding RamText}" FontSize="12" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="4" Text="{Binding Title}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
@@ -711,7 +711,7 @@
                         <TextBlock Text="{Binding Title}" Classes="dim" TextTrimming="CharacterEllipsis" MaxWidth="280" HorizontalAlignment="Left" />
                       </StackPanel>
                       <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding UptimeText, StringFormat='jalan {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource GreenBrush}" HorizontalAlignment="Right" />
+                        <TextBlock Text="{Binding UptimeText}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource GreenBrush}" HorizontalAlignment="Right" />
                         <TextBlock Text="{Binding Pid, StringFormat='PID {0}'}" Classes="dim" HorizontalAlignment="Right" />
                       </StackPanel>
                     </Grid>
