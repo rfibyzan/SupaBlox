@@ -208,7 +208,8 @@ public partial class MainWindow : Window
             return;
         }
         base.OnClosing(e);
-        if (!e.Cancel) ExitRequested?.Invoke();
+        // Saat aplikasi sendiri yang shutdown, jangan memicu ExitRequested lagi.
+        if (!e.Cancel && e.CloseReason != WindowCloseReason.ApplicationShutdown) ExitRequested?.Invoke();
     }
 
     private void ToggleMax() =>

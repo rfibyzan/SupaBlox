@@ -62,8 +62,14 @@ public partial class App : Application
         TrayIcon.SetIcons(this, new TrayIcons { tray });
     }
 
+    private bool _exiting;
+
     private void Exit(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        // desktop.Shutdown() menutup MainWindow -> OnClosing -> ExitRequested -> Exit lagi.
+        // Tanpa guard ini terjadi rekursi tak berujung (stack overflow saat aplikasi ditutup).
+        if (_exiting) return;
+        _exiting = true;
         _vm?.Shutdown();
         if (TrayIcon.GetIcons(this) is { } icons) foreach (var t in icons) t.IsVisible = false;
         desktop.Shutdown();

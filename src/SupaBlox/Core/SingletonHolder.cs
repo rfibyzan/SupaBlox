@@ -88,8 +88,12 @@ public sealed class SingletonHolder : IDisposable
         EventHeld = false;
     }
 
+    private bool _disposed;
+
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
         _stop.Set();
         _thread?.Join(TimeSpan.FromSeconds(3));
         _ready.Dispose();
