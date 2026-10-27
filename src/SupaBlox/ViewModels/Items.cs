@@ -213,6 +213,10 @@ public sealed class InstanceItem : ObservableObject
 
     private string _title = "";
     public string Title { get => _title; set => Set(ref _title, value); }
+
+    /// <summary>Dipilih untuk tetap jalan saat Multi Roblox dimatikan.</summary>
+    private bool _keep;
+    public bool Keep { get => _keep; set => Set(ref _keep, value); }
 }
 
 public sealed class QueueItem : ObservableObject

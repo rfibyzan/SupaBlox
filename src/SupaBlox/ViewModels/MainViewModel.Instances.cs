@@ -18,9 +18,92 @@ public sealed partial class MainViewModel
         set
         {
             if (value == _multiEnabled) return;
+            if (!value && OperatingSystem.IsWindows())
+            {
+                RefreshInstances();
+                if (Instances.Count > 1)
+                {
+                    // Lebih dari satu Roblox: tanya dulu, toggle kembali ON sampai dikonfirmasi.
+                    OpenDisableConfirm();
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(MultiEnabled)));
+                    return;
+                }
+            }
             if (value) EnableMulti(); else DisableMulti();
-            Notify(nameof(MultiEnabled), nameof(MultiBadge), nameof(MultiBadgeFg), nameof(MultiBadgeBg), nameof(MutexText), nameof(EventText), nameof(MutexOk), nameof(EventOk), nameof(MultiShort));
+            NotifyMulti();
         }
+    }
+
+    private void NotifyMulti() =>
+        Notify(nameof(MultiEnabled), nameof(MultiBadge), nameof(MultiBadgeFg), nameof(MultiBadgeBg), nameof(MutexText), nameof(EventText), nameof(MutexOk), nameof(EventOk), nameof(MultiShort));
+
+    // ---------- Konfirmasi matikan Multi (lebih dari 1 Roblox) ----------
+
+    private bool _isDisableOpen, _disableBusy;
+    public bool IsDisableOpen { get => _isDisableOpen; set => Set(ref _isDisableOpen, value); }
+    public bool DisableIdle => !_disableBusy;
+    private string _disableStatus = "";
+    public string DisableStatus { get => _disableStatus; set { if (Set(ref _disableStatus, value)) Notify(nameof(HasDisableStatus)); } }
+    public bool HasDisableStatus => _disableStatus.Length > 0;
+    public string DisableTitle => $"{Instances.Count} Roblox sedang berjalan";
+
+    public RelayCommand CancelDisableCommand => _cancelDisable ??= new RelayCommand(() => { if (!_disableBusy) IsDisableOpen = false; });
+    private RelayCommand? _cancelDisable;
+    public RelayCommand ConfirmDisableCommand => _confirmDisable ??= new RelayCommand(() => _ = ConfirmDisableAsync());
+    private RelayCommand? _confirmDisable;
+
+    private void OpenDisableConfirm()
+    {
+        // Default: pertahankan instance paling lama (biasanya akun utama).
+        var keep = Instances.OrderBy(i => i.StartTime ?? DateTime.MaxValue).First();
+        foreach (var i in Instances) i.Keep = i == keep;
+        DisableStatus = "";
+        Notify(nameof(DisableTitle));
+        IsDisableOpen = true;
+    }
+
+    private async Task ConfirmDisableAsync()
+    {
+        if (_disableBusy) return;
+        var keep = Instances.FirstOrDefault(i => i.Keep);
+        if (keep == null) { DisableStatus = "Pilih satu Roblox yang tetap jalan."; return; }
+        _disableBusy = true; Notify(nameof(DisableIdle));
+        try
+        {
+            var others = Instances.Where(i => i != keep).Select(i => i.Pid).ToList();
+            DisableStatus = $"Menutup {others.Count} Roblox lain…";
+            foreach (var pid in others)
+            {
+                try { using var p = Process.GetProcessById(pid); p.CloseMainWindow(); } catch { }
+            }
+            // Tunggu sampai semua tertutup (maks 15 detik). WM_CLOSE saja, tidak kill paksa.
+            var until = DateTime.Now.AddSeconds(15);
+            List<int> left = others;
+            while (DateTime.Now < until)
+            {
+                await Task.Delay(500);
+                left = others.Where(IsAlive).ToList();
+                if (left.Count == 0) break;
+                DisableStatus = $"Menunggu {left.Count} Roblox tertutup…";
+            }
+            RefreshInstances();
+            if (left.Count > 0)
+            {
+                DisableStatus = $"{left.Count} Roblox belum tertutup (PID {string.Join(", ", left)}). Multi Roblox tetap ON; tutup manual lalu coba lagi.";
+                return;
+            }
+            DisableMulti();
+            NotifyMulti();
+            IsDisableOpen = false;
+            ShowMessage($"Multi Roblox OFF. Tersisa PID {keep.Pid} ({keep.AccountName}).");
+        }
+        finally { _disableBusy = false; Notify(nameof(DisableIdle)); }
+    }
+
+    private static bool IsAlive(int pid)
+    {
+        try { using var p = Process.GetProcessById(pid); return !p.HasExited; }
+        catch { return false; }
     }
 
     private void EnableMulti()

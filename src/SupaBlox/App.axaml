@@ -19,6 +19,7 @@
       <SolidColorBrush x:Key="AccentTextBrush" Color="#BAA6FF" />
       <SolidColorBrush x:Key="GreenBrush" Color="#34D399" />
       <SolidColorBrush x:Key="RedBrush" Color="#F87171" />
+      <SolidColorBrush x:Key="YellowBrush" Color="#FBBF24" />
       <LinearGradientBrush x:Key="AccentGrad" StartPoint="0%,50%" EndPoint="100%,50%">
         <GradientStop Color="#7C5CFF" Offset="0" />
         <GradientStop Color="#A06CFF" Offset="1" />
@@ -137,6 +138,21 @@
     <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#2A2550" />
       <Setter Property="Foreground" Value="#8A80C0" />
+    </Style>
+    <Style Selector="Button.danger">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.danger /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#DC4C4C" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#EF5F5F" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.danger:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#4A2228" />
+      <Setter Property="Foreground" Value="#B08088" />
     </Style>
     <Style Selector="Button.icon">
       <Setter Property="Padding" Value="0" />
