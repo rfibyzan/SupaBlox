@@ -42,7 +42,12 @@ public partial class App : Application
         var show = new NativeMenuItem("Tampilkan SupaBlox");
         show.Click += (_, _) => _window?.ShowFromTray();
         var multi = new NativeMenuItem("Multi Roblox ON/OFF");
-        multi.Click += (_, _) => { if (_vm != null) _vm.MultiEnabled = !_vm.MultiEnabled; };
+        multi.Click += (_, _) =>
+        {
+            if (_vm == null) return;
+            _vm.MultiEnabled = !_vm.MultiEnabled;
+            if (_vm.IsDisableOpen) _window?.ShowFromTray(); // dialog konfirmasi perlu jendela terlihat
+        };
         var exit = new NativeMenuItem("Keluar");
         exit.Click += (_, _) => Exit(desktop);
 

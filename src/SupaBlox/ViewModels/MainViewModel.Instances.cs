@@ -25,7 +25,7 @@ public sealed partial class MainViewModel
                 {
                     // Lebih dari satu Roblox: tanya dulu, toggle kembali ON sampai dikonfirmasi.
                     OpenDisableConfirm();
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(MultiEnabled)));
+                    NotifyMulti();
                     return;
                 }
             }
@@ -33,6 +33,11 @@ public sealed partial class MainViewModel
             NotifyMulti();
         }
     }
+
+    // Toggle tidak langsung berubah saat diklik; nilai ON/OFF hanya ikut state asli.
+    // Saat >1 Roblox jalan, OFF baru terjadi setelah "Tutup lainnya & OFF" berhasil.
+    public RelayCommand ToggleMultiCommand => _toggleMulti ??= new RelayCommand(() => MultiEnabled = !MultiEnabled);
+    private RelayCommand? _toggleMulti;
 
     private void NotifyMulti() =>
         Notify(nameof(MultiEnabled), nameof(MultiBadge), nameof(MultiBadgeFg), nameof(MultiBadgeBg), nameof(MutexText), nameof(EventText), nameof(MutexOk), nameof(EventOk), nameof(MultiShort));

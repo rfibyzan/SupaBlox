@@ -52,7 +52,9 @@
           <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="Multi Roblox" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
-              <ToggleSwitch Grid.Column="1" IsChecked="{Binding MultiEnabled}" OnContent="" OffContent="" MinWidth="0" Margin="0,-6,-10,-6" />
+              <Button Grid.Column="1" Classes="switchwrap" Command="{Binding ToggleMultiCommand}" Margin="0,-6,-10,-6" ToolTip.Tip="Multi Roblox ON/OFF">
+                <ToggleSwitch IsChecked="{Binding MultiEnabled, Mode=OneWay}" IsHitTestVisible="False" Focusable="False" OnContent="" OffContent="" MinWidth="0" />
+              </Button>
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="6">
               <Ellipse Width="7" Height="7" Fill="{StaticResource GreenBrush}" IsVisible="{Binding MutexOk}" VerticalAlignment="Center" />
@@ -513,7 +515,9 @@
               <StackPanel Spacing="10">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Text="Multi Roblox" Classes="h2" VerticalAlignment="Center" />
-                  <ToggleSwitch Grid.Column="1" IsChecked="{Binding MultiEnabled}" OnContent="" OffContent="" MinWidth="0" Margin="0,-6,-10,-6" />
+                  <Button Grid.Column="1" Classes="switchwrap" Command="{Binding ToggleMultiCommand}" Margin="0,-6,-10,-6" ToolTip.Tip="Multi Roblox ON/OFF">
+                <ToggleSwitch IsChecked="{Binding MultiEnabled, Mode=OneWay}" IsHitTestVisible="False" Focusable="False" OnContent="" OffContent="" MinWidth="0" />
+              </Button>
                 </Grid>
                 <Border Classes="badge" HorizontalAlignment="Left" Background="{Binding MultiBadgeBg}">
                   <TextBlock Text="{Binding MultiBadge}" Foreground="{Binding MultiBadgeFg}" FontSize="10" FontWeight="Bold" />
